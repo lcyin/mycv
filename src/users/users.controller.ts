@@ -8,14 +8,17 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   Session,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorator/current-user.decorator';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { TokensDto } from './dtos/tokens.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserDto } from './dtos/user.dto';
 import { User } from './users.entity';
@@ -23,7 +26,7 @@ import { UsersService } from './users.service';
 
 @Controller('auth')
 // format outgoing responses
-@Serialize(UserDto)
+// @Serialize(UserDto)
 export class UsersController {
   constructor(
     private usersService: UsersService,
@@ -47,11 +50,22 @@ export class UsersController {
     session.userId = user.id;
     return user;
   }
+  // @Serialize(TokensDto)
+  @Post('/signupLocal')
+  async createUserLocal(@Body() body: CreateUserDto) {
+    return await this.authService.signupLocal(body.email, body.password);
+  }
+
   @Post('/signin')
   async signin(@Body() body: CreateUserDto, @Session() session) {
     const user = await this.authService.signin(body.email, body.password);
     session.userId = user.id;
     return user;
+  }
+
+  @Post('/refresh')
+  refreshTokens() {
+    return this.authService.refreshTokens();
   }
 
   @Get('/:id')

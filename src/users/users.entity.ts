@@ -3,8 +3,10 @@ import {
   AfterRemove,
   AfterUpdate,
   Column,
+  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -13,8 +15,8 @@ export class User {
   id: number;
   @Column()
   email: string;
-  @Column()
-  password: string;
+  // @Column()
+  // password: string;
 
   @AfterInsert()
   logInsert() {
@@ -30,4 +32,15 @@ export class User {
   logRemove() {
     console.log('Removed user with id', this.id);
   }
+  // nest-jwts development
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Column()
+  hash: string;
+  @Column({ nullable: true })
+  hashedRt?: string;
 }

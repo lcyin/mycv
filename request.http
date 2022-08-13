@@ -7,12 +7,21 @@ Content-Type: application/json
     "password":"asdf"
 }
 
+### Create a new user local
+POST http://localhost:3000/auth/signupLocal
+Content-Type: application/json
+
+{
+    "email":"test5@test.com",
+    "password":"asdf"
+}
+
 ### signin as an existing user
 POST http://localhost:3000/auth/signin
 Content-Type: application/json
 
 {
-    "email":"asdf@asdf.com",
+    "email":"test@test.com",
     "password":"asdf"
 }
 
