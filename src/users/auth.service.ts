@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,8 +8,9 @@ import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
-import { Tokens } from './types';
+import { JwtPayload, Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
+import { IsNull, Not } from 'typeorm';
 
 const scrypt = promisify(_scrypt);
 
@@ -17,38 +19,31 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   hashData(data: string) {
     return bcrypt.hash(data, 10);
   }
 
   async getTokens(userId: number, email: string): Promise<Tokens> {
+    const jwtPayload: JwtPayload = {
+      sub: userId,
+      email: email,
+    };
+
     const [at, rt] = await Promise.all([
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          email,
-        },
-        {
-          secret: 'at-token',
-          expiresIn: 60 * 15,
-        },
-      ),
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          email,
-        },
-        {
-          secret: 'rt-token',
-          expiresIn: 60 * 60 * 24 * 7,
-        },
-      ),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: 'atsecret',
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: 'rtsecret',
+        expiresIn: '7 days',
+      }),
     ]);
     return {
-      access_token: 'at',
-      refresh_token: 'rt',
+      access_token: at,
+      refresh_token: rt,
     };
   }
 
@@ -92,7 +87,21 @@ export class AuthService {
     const user = await this.usersService.create(email, hash);
     const tokens = await this.getTokens(user.id, user.email);
     const result = await this.updateRtHash(user.id, tokens.refresh_token);
-    console.log(result);
+    return tokens;
+  }
+
+  async signinLocal(email: string, password: string): Promise<Tokens> {
+    const [user] = await this.usersService.find(email);
+    if (!user) {
+      throw new ForbiddenException('Access Denied');
+    }
+    const passwordMatch = bcrypt.compare(password, user.hash);
+    if (!passwordMatch) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
     return tokens;
   }
 
@@ -101,5 +110,27 @@ export class AuthService {
     return await this.usersService.update(userId, { hashedRt: hash });
   }
 
-  async refreshTokens() {}
+  async logoutLocal(userId: number) {
+    const [user] = await this.usersService.findByWhere([
+      { id: userId, hashedRt: Not(IsNull()) },
+    ]);
+    if (!user) {
+      throw new NotFoundException('update user not found');
+    }
+    return await this.usersService.update(user.id, { hashedRt: null });
+  }
+
+  async refreshTokens(userId: number, rt: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user || !user.hashedRt) {
+      throw new NotFoundException('Access Denied');
+    }
+    const rtMatches = bcrypt.compare(rt, user.hashedRt);
+    if (!rtMatches) {
+      throw new NotFoundException('Access Denied');
+    }
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
+    return tokens;
+  }
 }

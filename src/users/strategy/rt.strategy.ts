@@ -4,13 +4,13 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Request } from 'express';
 
 @Injectable()
-export class RtStrategy extends PassportStrategy(Strategy) {
+export class RtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor() {
     super({
       // how are we get token
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       // use to sign the token
-      secretOrKey: 'rt-secret',
+      secretOrKey: 'rtsecret',
       passReqToCallback: true,
     });
   }

@@ -6,6 +6,8 @@ import { ReportsModule } from './reports/reports.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/users.entity';
 import { Report } from './reports/reports.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { AtGuard } from './guards';
 
 @Module({
   imports: [
@@ -19,6 +21,12 @@ import { Report } from './reports/reports.entity';
     ReportsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AtGuard,
+    },
+  ],
 })
 export class AppModule {}

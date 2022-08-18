@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from './users.entity';
 
 @Injectable()
@@ -37,5 +37,10 @@ export class UsersService {
       throw new NotFoundException('user not found');
     }
     return this.repo.remove(user);
+  }
+
+  async findByWhere(where: FindOptionsWhere<User> | FindOptionsWhere<User>[]) {
+    const users = this.repo.find({ where });
+    return users;
   }
 }

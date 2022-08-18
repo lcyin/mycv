@@ -12,7 +12,7 @@ POST http://localhost:3000/auth/signupLocal
 Content-Type: application/json
 
 {
-    "email":"test5@test.com",
+    "email":"test57@test.com",
     "password":"asdf"
 }
 
@@ -21,9 +21,28 @@ POST http://localhost:3000/auth/signin
 Content-Type: application/json
 
 {
-    "email":"test@test.com",
+    "email":"test57@test.com",
     "password":"asdf"
 }
+
+### signin as an existing user local
+POST http://localhost:3000/auth/signinLocal
+Content-Type: application/json
+
+{
+    "email":"test57@test.com",
+    "password":"asdf"
+}
+
+### logout user local
+POST http://localhost:3000/auth/logoutLocal
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUxLCJlbWFpbCI6InRlc3Q1N0B0ZXN0LmNvbSIsImlhdCI6MTY2MDc4NTI2MywiZXhwIjoxNjYwNzg2MTYzfQ.9aTj5tVKzHmBK571GsUoTyfSRuyqGpDrN9XbCZtjafc
+Content-Type: application/json
+
+### get refreshtoken local
+POST http://localhost:3000/auth/refreshLocal
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUxLCJlbWFpbCI6InRlc3Q1N0B0ZXN0LmNvbSIsImlhdCI6MTY2MDc4NDkyNSwiZXhwIjoxNjYxMzg5NzI1fQ.X49Qo1pCjEDrW-s4n3ST45il__95p2n_oDy980fuUMI
+Content-Type: application/json
 
 ### Get a user by id
 GET http://localhost:3000/auth/2

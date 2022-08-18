@@ -3,26 +3,36 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   Res,
   Session,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { Request, Response } from 'express';
+// import { AuthGuard } from 'src/guards/auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorator/current-user.decorator';
+import {
+  CurrentUser,
+} from './decorator/current-user.decorator';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { TokensDto } from './dtos/tokens.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserDto } from './dtos/user.dto';
 import { User } from './users.entity';
 import { UsersService } from './users.service';
+import { AuthGuard } from '@nestjs/passport';
+import { AtGuard, RtGuard } from '../guards';
+import { Public } from './decorator/public.decorator';
+import { GetCurrentUserId } from './decorator/get-current-user-id.decorator';
+import { GetCurrentUser } from './decorator/get-current-user.decorator';
 
 @Controller('auth')
 // format outgoing responses
@@ -31,10 +41,10 @@ export class UsersController {
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   @Get('/whoami')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   whoAmI(@CurrentUser() user: User) {
     return user;
   }
@@ -50,10 +60,37 @@ export class UsersController {
     session.userId = user.id;
     return user;
   }
+
+  @Public()
   // @Serialize(TokensDto)
   @Post('/signupLocal')
+  @HttpCode(HttpStatus.CREATED)
   async createUserLocal(@Body() body: CreateUserDto) {
     return await this.authService.signupLocal(body.email, body.password);
+  }
+
+  @Public()
+  @Post('/signinLocal')
+  @HttpCode(HttpStatus.OK)
+  async signinUserLocal(@Body() body: CreateUserDto) {
+    return await this.authService.signinLocal(body.email, body.password);
+  }
+
+  @Post('/logoutLocal')
+  @HttpCode(HttpStatus.OK)
+  async logoutLocal(@GetCurrentUserId() userId: number) {
+    return await this.authService.logoutLocal(userId);
+  }
+
+  @Public()
+  @Post('/refreshLocal')
+  @UseGuards(RtGuard)
+  @HttpCode(HttpStatus.OK)
+  async refreshLocal(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+  ) {
+    return await this.authService.refreshTokens(userId, refreshToken);
   }
 
   @Post('/signin')
@@ -63,10 +100,10 @@ export class UsersController {
     return user;
   }
 
-  @Post('/refresh')
-  refreshTokens() {
-    return this.authService.refreshTokens();
-  }
+  // @Post('/refresh')
+  // refreshTokens() {
+  //   return this.authService.refreshTokens();
+  // }
 
   @Get('/:id')
   async findUser(@Param('id') id: string) {
