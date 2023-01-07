@@ -11,6 +11,10 @@ export class ReportsService {
   constructor(@InjectRepository(Report) private repo: Repository<Report>) {}
 
   createEstimate({ make, model, lng, lat, year, mileage }: GetEstimateDto) {
+    console.log(
+      '🚀 ~ file: reports.service.ts:14 ~ ReportsService ~ createEstimate ~ mileage',
+      mileage,
+    );
     return this.repo
       .createQueryBuilder()
       .select('AVG(price)', 'price')
@@ -20,7 +24,7 @@ export class ReportsService {
       .andWhere('lat - :lat BETWEEN -5 AND 5', { lat })
       .andWhere('year - :year BETWEEN -3 AND 3', { year })
       .andWhere('approved IS TRUE')
-      .orderBy('ABS(mileage - :mileage)', 'DESC')
+      .orderBy(':mileage', 'DESC')
       .setParameters({ mileage })
       .getRawMany();
   }
