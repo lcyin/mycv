@@ -11,6 +11,11 @@ import {
   Session,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../guards/auth.guard';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { AuthService } from './auth.service';
@@ -21,6 +26,7 @@ import { UserDto } from './dtos/user.dto';
 import { User } from './users.entity';
 import { UsersService } from './users.service';
 
+@ApiTags('Auth')
 @Controller('auth')
 // format outgoing responses
 @Serialize(UserDto)
@@ -42,6 +48,13 @@ export class UsersController {
   }
 
   @Post('/signup')
+  @ApiCreatedResponse({
+    description: 'Created user object as response',
+    type: User,
+  })
+  @ApiBadRequestResponse({
+    description: 'User cannot register.',
+  })
   async createUser(@Body() body: CreateUserDto, @Session() session) {
     console.log('auth/signup');
     const user = await this.authService.signup(body.email, body.password);

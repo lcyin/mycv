@@ -18,7 +18,10 @@ import { ReportDto } from './dtos/report.dto';
 import { ApproveReportDto } from './dtos/approve-report-dto';
 import { AdminGuard } from 'src/guards/admin.guard';
 import { GetEstimateDto } from './dtos/get-estimate.dto';
+import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { Report } from './reports.entity';
 
+@ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
   constructor(private reportsService: ReportsService) {}
@@ -29,6 +32,10 @@ export class ReportsController {
   }
 
   @Post()
+  @ApiCreatedResponse({
+    description: 'Created report object as response',
+    type: Report,
+  })
   @UseGuards(AuthGuard)
   @Serialize(ReportDto)
   async createReport(@Body() body: CreateReportDto, @CurrentUser() user: User) {
